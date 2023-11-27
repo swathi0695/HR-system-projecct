@@ -38,7 +38,11 @@ def read_data_from_db(conn):
 
     # Read data into a Pandas DataFrame
     data = pd.read_sql_query(query, conn)
-    data = data.fillna(0)
+    string_columns = data.select_dtypes(include='object').columns
+    float_columns = data.select_dtypes(include=['float', 'int']).columns
+    data[string_columns] = data[string_columns].astype(str)
+    data[float_columns] = data[float_columns].fillna(0.0)
+
     # Close the database connection
     conn.dispose()
     return data

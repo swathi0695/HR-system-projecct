@@ -26,7 +26,6 @@ urlpatterns = [
     path('employee/<int:employee_id>', views.read_one_record),
     path('employee/update', views.update_employee),
     path('employee/<int:employee_id>/delete', views.delete_employee),
-    path('employee/insert', views.insert_record_into_table),
     path('employees/get_average_age_per_industry', views.get_average_age_per_industry),
     path('employees/get_average_salary_per_industry', views.get_average_salary_per_industry),
     path('employees/get_average_salary_per_years_of_experience',

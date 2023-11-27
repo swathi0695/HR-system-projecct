@@ -1,5 +1,7 @@
 import pandas as pd
+from typing import List, Dict
 
+from rest_framework.request import Request
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
@@ -12,9 +14,10 @@ from .common_module import query_from_db, pyspark_utils
 
 
 @api_view(['GET'])
-def read_all_employees(request:object) -> object:
+def read_all_employees(request: Request) -> Response:
     """
     This function retrieves all employee records from the database.
+
     Args:
     param1 (type): request object.
     
@@ -23,7 +26,6 @@ def read_all_employees(request:object) -> object:
     """
     try:
         engine = query_from_db.create_connection()
-        print(engine)
         df = query_from_db.read_data_from_db(engine)
 
         # Sort employees (default sort by ID)
@@ -58,9 +60,10 @@ def read_all_employees(request:object) -> object:
 
 
 @api_view(['GET'])
-def read_one_record(request: object, employee_id: int) -> object:
+def read_one_record(request: Request, employee_id: int) -> Response:
     """
     This function retrieves one employee record from the database matching the employee_id
+
     Args:
     param1 (object): request
     param2 (int): employee_id
@@ -83,9 +86,10 @@ def read_one_record(request: object, employee_id: int) -> object:
 
 
 @api_view(['PUT'])
-def update_employee(request: object) -> object:
+def update_employee(request: Request) -> Response:
     """
     This function updates an employee record based on the request body.
+    
     Args:
     param1 (object): request
     
@@ -93,16 +97,16 @@ def update_employee(request: object) -> object:
     dict: returns success message once updated in the database 
     """
     try:
-        input_req = {}
+        input_request = {}
         for req_data in request.data.items():
-            input_req[req_data[0]] = req_data[1]
-        if 'id' not in input_req:
+            input_request[req_data[0]] = req_data[1]
+        if 'id' not in input_request:
             return Response({"message" : "id is required field in for /employee/update api"})
         
         set_clause = ""
-        where_clause = f" WHERE id = {input_req['id']}"
+        where_clause = f" WHERE id = {input_request['id']}"
 
-        for key, value in input_req.items():
+        for key, value in input_request.items():
             if value == "" or key == 'id' or value is None:
                 continue
             elif isinstance(value, str):
@@ -124,7 +128,7 @@ def update_employee(request: object) -> object:
 
 
 @api_view(['DELETE'])
-def delete_employee(request: object, employee_id: int):
+def delete_employee(request: Request, employee_id: int) -> Response:
     """
     This function deletes an employee record from the database matching the employee_id
     Args:
@@ -136,34 +140,23 @@ def delete_employee(request: object, employee_id: int):
     """
     try:
         delete_query = f"DELETE FROM employees WHERE id = {employee_id}"
-        print("delete_query --->\n", delete_query)
         engine = query_from_db.create_connection()
         with engine.connect() as connection:
-            print(connection.execute(text(delete_query)))
+            connection.execute(text(delete_query))
             connection.commit()
             return Response({"message": "delete sucess"})
     except Exception as e:
         connection.rollback()
-        print(f"Error while deleting record : {e}")
+        print(f"Error in deleting record : {e}")
         raise e
     finally:
         connection.close()
 
 
-@api_view(['POST'])
-def insert_record_into_table(request: object) -> object:
-    insert_query = f"INSERT INTO employees (id, first_name, last_name,email,gender,date_of_birth,industry,salary,years_of_experience) VALUES (1,'Annmarie','Crooke','acrooke0@gizmodo.com','M','09/07/1978','Other Specialty Stores',180466.37,10)"
-    engine = query_from_db.create_connection()
-    with engine.connect() as connection:
-        print(connection.execute(text(insert_query)))
-        connection.commit()
-    return Response({"message": "insert success"})
-
-
 @api_view(['GET'])
-def get_average_age_per_industry(request: object) -> object:
+def get_average_age_per_industry(request: Request) -> Response:
     """
-    Calculate the average age per industry.
+    Calculates the average age per industry.
     Args:
     param1 (object): request
     
@@ -179,20 +172,19 @@ def get_average_age_per_industry(request: object) -> object:
 
         # Calculate average age per industry
         avg_age_per_industry = df.groupBy("industry").agg({"age": "avg"}).collect()
-        res = {}
-        # print("type of avg_age_per_industry --->",type(avg_age_per_industry))
+        result = {}
         for i in range(len(avg_age_per_industry)):
-            res[avg_age_per_industry[i][0]] = avg_age_per_industry[i][1]
-        return Response(res)
+            result[avg_age_per_industry[i][0]] = avg_age_per_industry[i][1]
+        return Response(result)
     except Exception as e:
-        print(f"Error while get_average_age_per_industry record : {e}")
+        print(f"Error in get_average_age_per_industry record : {e}")
         raise e
     finally:
         spark_session_obj.stop()
 
 
 @api_view(['GET'])
-def get_average_salary_per_industry(request: object) -> object:
+def get_average_salary_per_industry(request: Request) -> Response:
     """
     Calculate the average salary per industry.
     Args:
@@ -202,25 +194,25 @@ def get_average_salary_per_industry(request: object) -> object:
     dict: A dictionary where keys represent industries and values represent the average salary of employees in that industry.
     """
     try:
-        res = {}
+        result = {}
         df, spark_session_obj = pyspark_utils.read_table_data_using_spark()
 
         # Calculate average salaries per industry
         avg_salary_per_industry = df.groupBy("industry").agg({"salary": "avg"}).collect()
         for i in range(len(avg_salary_per_industry)):
-            res[avg_salary_per_industry[i][0]] = avg_salary_per_industry[i][1]
-        return Response(res)
+            result[avg_salary_per_industry[i][0]] = avg_salary_per_industry[i][1]
+        return Response(result)
     except Exception as e:
-        print(f"Error while get_average_salary_per_industry record : {e}")
+        print(f"Error in get_average_salary_per_industry record : {e}")
         raise e
     finally:
         spark_session_obj.stop()
 
 
 @api_view(['GET'])
-def get_average_salary_per_years_of_exp(request: object) -> object:
+def get_average_salary_per_years_of_exp(request: Request) -> Response:
     """
-    Calculate the average salary per years of experience.
+    Calculates the average salary per years of experience.
     Args:
     param1 (object): request
     
@@ -251,14 +243,14 @@ def get_average_salary_per_years_of_exp(request: object) -> object:
             final_res.append(result_data)
         return Response({"average_salary_per_years_of_exp" : final_res})
     except Exception as e:
-        print(f"Error while get_average_salary_per_years_of_exp record : {e}")
+        print(f"Error in get_average_salary_per_years_of_exp record : {e}")
         raise e
     finally:
         spark_session_obj.stop()
 
 
 @api_view(['GET'])
-def get_other_interesting_stats(request: object) -> object:
+def get_other_interesting_stats(request: Request) -> Response:
     """
     Calculates some other interesting statistics from the data like, 
     gender count in the data, average salary of by gender, top industries with highest employee count.
@@ -293,14 +285,14 @@ def get_other_interesting_stats(request: object) -> object:
         for i in range(len(top_industries)):
             top_industries_dict[top_industries[i][0]] = top_industries[i][1]
 
-        res = {
+        result = {
             "gender_count" : gender_count_dict,
             "avg_salary_by_gender" : avg_salary_by_gender_dict,
             "top_industries" : top_industries_dict
         }
-        return Response(res)
+        return Response(result)
     except Exception as e:
-        print(f"Error while get_other_interesting_stats record : {e}")
+        print(f"Error in get_other_interesting_stats record : {e}")
         raise e
     finally:
         spark_session_obj.stop()
