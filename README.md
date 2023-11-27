@@ -26,6 +26,8 @@ To set up and run this application locally, follow these steps:
     ```
 
 3. Create a `.env` file in the root directory and define your variables:
+   ```bash
+   
     # db_creds
     DB_HOST='localhost'
     DB_NAME='hr_data'
@@ -41,8 +43,9 @@ To set up and run this application locally, follow these steps:
     SPARK_JDBC_URL='jdbc:postgresql://localhost:5432/hr_data'
     SPARK_DRIVER='org.postgresql.Driver'
     HADOOP_HOME=path_to_hadoop_home
+   ```
 
-4. (Optional) Create a virtual environment:
+5. (Optional) Create a virtual environment:
 
     ```bash
     python3 -m venv venv
@@ -51,7 +54,7 @@ To set up and run this application locally, follow these steps:
     venv\Scripts\activate  # For Windows
     ```
 
-5. Install dependencies:
+6. Install dependencies:
 
     ```bash
     pip install -r requirements.txt
@@ -74,10 +77,6 @@ After installation, run the application using the following steps:
     ```
 
 The application will be available at `http://127.0.0.1:8000/`.
-
-## API Documentation
-
-Explore the available APIs by navigating to `http://127.0.0.1:8000/api/` after starting the development server.
 
 ## Additional Notes
 
