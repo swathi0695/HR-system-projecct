@@ -64,13 +64,17 @@ To set up and run this application locally, follow these steps:
 
 After installation, run the application using the following steps:
 
-1. Apply migrations:
+1. Set up the database by using the script in the below path. This will populate the data in the HumanResources\miscellaneous\MOCK_DATA.json into the database table "employees"
+   ```bash
+   HumanResources\miscellaneous\insert_data_into_db.py
+   ```
+3. Apply migrations:
 
     ```bash
     python manage.py migrate
     ```
 
-2. Start the development server:
+4. Start the development server:
 
     ```bash
     python manage.py runserver
